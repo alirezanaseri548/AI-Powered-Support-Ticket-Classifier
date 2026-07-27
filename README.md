@@ -52,3 +52,5 @@ Next step:
 - role-based access control
 - protected ticket endpoints
 - preparation for ML service integration
+
+.
