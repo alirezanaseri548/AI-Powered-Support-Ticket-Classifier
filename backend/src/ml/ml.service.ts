@@ -1,6 +1,7 @@
 ﻿import { HttpService } from '@nestjs/axios';
-import { Injectable, BadGatewayException } from '@nestjs/common';
+import { BadGatewayException, Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
+import { AxiosError } from 'axios';
 import { firstValueFrom } from 'rxjs';
 
 export interface ClassifyTicketPayload {
@@ -17,6 +18,11 @@ export interface ClassifyTicketResult {
   [key: string]: unknown;
 }
 
+interface MlServiceErrorResponse {
+  detail?: string;
+  message?: string;
+}
+
 @Injectable()
 export class MlService {
   private readonly mlServiceUrl: string;
@@ -26,10 +32,14 @@ export class MlService {
     private readonly configService: ConfigService,
   ) {
     this.mlServiceUrl =
-      this.configService.get<string>('ML_SERVICE_URL') || 'http://127.0.0.1:8000';
+      this.configService.get<string>('ML_SERVICE_URL') ||
+      'http://127.0.0.1:8000';
   }
 
-  async classifyTicket(payload: ClassifyTicketPayload): Promise<ClassifyTicketResult> {
+
+  async classifyTicket(
+    payload: ClassifyTicketPayload,
+  ): Promise<ClassifyTicketResult> {
     const requestBody: ClassifyTicketPayload = {
       subject: payload.subject,
       description: payload.description,
@@ -51,11 +61,13 @@ export class MlService {
       );
 
       return response.data;
-    } catch (error) {
+    } catch (error: unknown) {
+      const axiosError = error as AxiosError<MlServiceErrorResponse>;
+
       const message =
-        error?.response?.data?.detail ||
-        error?.response?.data?.message ||
-        error?.message ||
+        axiosError.response?.data?.detail ||
+        axiosError.response?.data?.message ||
+        axiosError.message ||
         'ML service request failed';
 
       throw new BadGatewayException({
