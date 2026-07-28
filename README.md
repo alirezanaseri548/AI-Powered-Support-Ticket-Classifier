@@ -62,3 +62,13 @@ Next step:
 .
 
 .
+
+## Step 4
+Secure ticket API foundation completed:
+- protected ticket endpoints with JWT authentication
+- connected tickets to authenticated users
+- added user ownership for created tickets
+- limited regular users to their own tickets
+- allowed ADMIN and AGENT roles to update tickets
+- limited ticket deletion to ADMIN users
+- validated the protected ticket workflow through API tests
