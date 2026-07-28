@@ -31,3 +31,7 @@ venv/
 .env
 .env.local
 
+*-backup-*
+*.bak
+**/*.tsbuildinfo
+node_modules/
