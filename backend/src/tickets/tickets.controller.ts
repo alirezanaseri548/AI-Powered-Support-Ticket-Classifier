@@ -1,13 +1,12 @@
-﻿import {
-  Body,
+﻿import { MlService } from '../ml/ml.service';
+import { Body,
   Controller,
   Delete,
   Get,
   Param,
   Patch,
   Post,
-  UseGuards,
-} from '@nestjs/common';
+  UseGuards, Req } from '@nestjs/common';
 import { UserRole } from '@prisma/client';
 import { CurrentUser } from '../auth/decorators/current-user.decorator';
 import { Roles } from '../auth/decorators/roles.decorator';
@@ -21,7 +20,9 @@ import { TicketsService } from './tickets.service';
 @Controller('tickets')
 @UseGuards(JwtAuthGuard)
 export class TicketsController {
-  constructor(private readonly ticketsService: TicketsService) {}
+  constructor(private readonly ticketsService: TicketsService,
+    private readonly mlService: MlService,
+  ) {}
 
   @Post()
   create(@Body() createTicketDto: CreateTicketDto, @CurrentUser() user: AuthUser) {
@@ -51,5 +52,18 @@ export class TicketsController {
   remove(@Param('id') id: string) {
     return this.ticketsService.remove(id);
   }
+
+  @Post(':id/classify')
+  async classifyTicket(@Param('id') id: string, @Req() req: any) {
+    const ticket = await this.ticketsService.findOne(id, req.user);
+    const anyTicket = ticket as any;
+
+    return this.mlService.classifyTicket({
+      subject: anyTicket.subject || anyTicket.title || '',
+      description: anyTicket.description || anyTicket.body || anyTicket.content || '',
+      customerEmail: anyTicket.customerEmail || anyTicket.email || req.user?.email || '',
+    });
+  }
 }
+
 
